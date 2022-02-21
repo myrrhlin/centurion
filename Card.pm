@@ -89,7 +89,18 @@ sub value ($string) {
 # sorting cubestrings by their value (ascending)
 sub byvalue { value($a) <=> value($b) }
 
-
+# returns undef if impossible, otherwise a cubestring (including '')
+sub subtract ($acube, $bcube) {
+  my %cubes;
+  $cubes{$_}++ for split //, $acube;
+  $cubes{$_}-- for split //, $bcube;
+  my $remain = '';
+  foreach my $color (sort byvalue keys %cubes) {
+    return undef if $cubes{$color} < 0;
+    $remain .= $color x $cubes{$color};
+  }
+  return $remain;
+}
 # increment a color -- used by conversion card
 sub colorinc ($cube, $plus = 1) {
   my $colors = 'YGBP';

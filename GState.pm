@@ -107,14 +107,9 @@ sub can_claim ($self) {
   return grep {$self->playable($_)} $self->reward->@*;
 }
 sub playable ($self, $card) {
-  my (%cubes, %cost);
-  $cubes{$_}++ for split //, $self->cubes;
-  return 1 if %cubes && $card->is_conversion;
-  $cost{$_}++ for split //, $card->cost;
-  foreach my $color (keys %cost) {
-    return 0 if (($cubes{$color}//0) < $cost{$color});
-  }
-  return 1;
+  return 1 if $self->cubes && $card->is_conversion;
+  my $left = Card::subtract($self->cubes, $card->cost);
+  return defined $left ? 1 : 0;
 }
 
 sub report ($self) {
@@ -128,7 +123,9 @@ sub report ($self) {
     my $card = $self->reward->[$i-1];
     my $bonus = $i == 1 ? '***' : $i == 2 ? '*' : '';
     print $i,$bonus,':',$card->describe(13); print $i==$num? "\n" : '  ';
-    push @menu, ["Claim reward $i$bonus: ". $card->describe, $i-1] if $self->playable($card);
+    next unless $self->playable($card);
+    my $left = Card::subtract($self->cubes, $card->cost);
+    push @menu, ["Claim reward $i$bonus: ". $card->describe, $i-1];
   }
   my @mktmenu;
   print 'Market:  ';
