@@ -125,7 +125,9 @@ sub report ($self) {
     print $i,$bonus,':',$card->describe(13); print $i==$num? "\n" : '  ';
     next unless $self->playable($card);
     my $left = Card::subtract($self->cubes, $card->cost);
-    push @menu, ["Claim reward $i$bonus: ". $card->describe, $i-1];
+    my $condition = sprintf ' leaving %s (%u)', $left, Card::value($left);
+    $condition .= ' BAD' if length($left) < 2;
+    push @menu, ["Claim reward $i$bonus: ". $card->describe . $condition, $i-1];
   }
   my @mktmenu;
   print 'Market:  ';
@@ -167,7 +169,10 @@ sub report ($self) {
     }
   }
   print 'Cubes: ', $self->cubes; say '       Score: ', $self->score;
-  return @menu, @mktmenu, ['Reclaim used cards'];
+  push @menu, @mktmenu;
+  $num = $self->discard->@*;
+  push @menu, ["Reclaim $num used cards"] if $num;
+  return @menu;
 }
 
 sub play ($self, $menuchoice) {
