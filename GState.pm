@@ -179,6 +179,7 @@ sub play ($self, $menuchoice) {
   croak 'play takes a menu choice' unless ref $menuchoice eq 'ARRAY';
   my ($text, $index) = @$menuchoice;
   my ($action) = split ' ', lc $text;
+  croak 'play take a menu choice' unless $action eq 'reclaim' || defined $index;
   my $copy = $self->clone;
   if ($action eq 'claim') {
     my $card = splice($self->reward->@*, $index, 1);
@@ -187,6 +188,12 @@ sub play ($self, $menuchoice) {
     $self->spend($card->cost);
     $self->scored($card->benefit);
   } elsif ($action eq 'purchase') {
+    my $cost = substr($self->cubes, 0, $index);
+    $self->spend($cost);
+    for (my $i=0; $i<$index; $i++) {
+      # TODO there's a decision here about distributing them
+      $self->market_cubes->[$i] = Card::norm($self->market_cubes->[$i] . substr($cost,$i,1));
+    }
     my $card = splice($self->market->@*, $index, 1);
     push $self->market->@*, shift $self->deck->@* if $self->deck && $self->deck->@*;
     push $self->hand->@*, $card;
@@ -206,6 +213,8 @@ sub play ($self, $menuchoice) {
   } elsif ($action eq 'reclaim') {
     push $self->hand->@*, $self->discard->@*;
     $self->discard([]);
+  } else {
+    warn "unknown card choice: $text";
   }
 }
 
