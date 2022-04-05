@@ -115,12 +115,18 @@ has type => (is => 'ro', required => 1,
 );
 has cost => (is => 'ro', required => 1, isa => Str, coerce => \&norm);
 has benefit => (is => 'ro', required => 1, isa => Str, coerce => \&norm);
-has gain => (is => 'lazy', isa => Maybe[Int]);
+has vgain => (is => 'lazy', isa => Maybe[Int]);  # change in value
+has cgain => (is => 'lazy', isa => Maybe[Int]);  # change in length
 
-sub _build_gain ($self) {
+sub _build_vgain ($self) {
   return if $self->type eq 'reward';
   return 2 if $self->cost eq '__';
   return value($self->benefit) - value($self->cost);
+}
+sub _build_cgain ($self) {
+  return if $self->type eq 'reward';
+  return 0 if $self->cost eq '__';
+  return length($self->benefit) - length($self->cost);
 }
 
 around BUILDARGS => sub {
@@ -172,7 +178,7 @@ sub conversion_list ($self, $cubestring) {
 
 sub describe ($self, $width = 0) {
   my $tag = substr($self->type, 0, 1);
-  $tag .= '+' . $self->gain if $self->type eq 'xform';
+  $tag .= '+' . $self->vgain if $self->type eq 'xform';
   my $out = sprintf '%s:%s->%s', $tag, $self->cost, $self->benefit;
   if (length $out < $width) { $out .= ' 'x($width - length $out) }
   return $out;
