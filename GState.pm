@@ -124,7 +124,11 @@ sub report ($self) {
   my $num = $self->reward->@*;
   for my $i (1..$num) {
     my $card = $self->reward->[$i-1];
-    my $bonus = $i == 1 ? '***' : $i == 2 ? '*' : '';
+    my $bonus = '';
+    $bonus = '***' if $self->golds && $i == 1;
+    if (!$bonus && $self->silvers) {
+      $bonus = '*' if $i == 1+ $self->golds? 1:0;
+    }
     print $i,$bonus,':',$card->describe(13); print $i==$num? "\n" : '  ';
     next unless $self->playable($card);
     my $left = Card::subtract($self->cubes, $card->cost);
@@ -188,11 +192,13 @@ sub play ($self, $menuchoice) {
   croak 'play take a menu choice' unless $action eq 'reclaim' || defined $index;
   my $copy = $self->clone;
   if ($action eq 'claim') {
+    my $bonus = $text =~ /reward \d(\*+):/ ? $1 : undef;
+    $bonus = $bonus? length($bonus) : 0;
     my $card = splice($self->reward->@*, $index, 1);
     push $self->reward->@*, shift $self->reward_deck->@*
       if $self->reward_deck && $self->reward_deck->@*;
     $self->spend($card->cost);
-    $self->scored($card->benefit);
+    $self->scored($card->benefit + $bonus);
   } elsif ($action eq 'purchase') {
     my $cost = substr($self->cubes, 0, $index);
     $self->spend($cost);
