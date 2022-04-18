@@ -172,7 +172,8 @@ sub report ($self) {
       push @menu, ["Play ".$card->describe . $loss, $i-1];
     }
   }
-  print 'Cubes: ', $self->cubes; say '       Score: ', $self->score;
+  printf 'Cubes %u: %s (%u)', length($self->cubes), $self->cubes, Card::value($self->cubes);
+  say '       Score: ', $self->score;
   push @menu, @mktmenu;
   $num = $self->discard->@*;
   push @menu, ["Reclaim $num used cards"] if $num;
