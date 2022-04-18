@@ -51,6 +51,7 @@ has market_cubes => (is => 'rw', required => 1, isa => ArrayRef[Str, 5, 5],
 has deck => (is => 'rw', isa => ArrayRef[InstanceOf["Card"]]);
 has reward_deck => (is => 'rw', isa => ArrayRef[InstanceOf["Card"]]);
 
+has [qw(golds silvers)] => (is => 'rw', isa => Int, default => 5);
 has maxcubes => (is => 'ro', isa => Int, default => 10);
 
 around BUILDARGS => sub {
