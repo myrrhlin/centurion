@@ -51,6 +51,8 @@ has market_cubes => (is => 'rw', required => 1, isa => ArrayRef[Str, 5, 5],
 has deck => (is => 'rw', isa => ArrayRef[InstanceOf["Card"]]);
 has reward_deck => (is => 'rw', isa => ArrayRef[InstanceOf["Card"]]);
 
+has maxcubes => (is => 'ro', isa => Int, default => 10);
+
 around BUILDARGS => sub {
   my ( $orig, $class, @args ) = @_;
   my %args;
@@ -165,7 +167,9 @@ sub report ($self) {
       push @menu, map {; [sprintf('Convert %s with card %u', $_, $i), $i-1]}
         $card->conversion_list($self->cubes);
     } else {
-      push @menu, ["Play ".$card->describe, $i-1];
+      my $cubeloss = length($self->cubes) + $card->cgain - $self->maxcubes;
+      my $loss = $cubeloss > 0 ? " (-$cubeloss cube)" : '';
+      push @menu, ["Play ".$card->describe . $loss, $i-1];
     }
   }
   print 'Cubes: ', $self->cubes; say '       Score: ', $self->score;
