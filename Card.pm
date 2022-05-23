@@ -8,9 +8,9 @@ use feature 'signatures', 'postderef';
 
 A card in the game.  Generally, its C<cost> and C<benefit> fields are
 strings of the letters [YGBP], each representing a cube of the color
-Yellow Green Blue or Pink.  During instantiation, though, it is acceptable
+Yellow Green Blue or Pink.  (During instantiation, though, it is acceptable
 to use lowercase, or digits 1-4 to represent the colors instead;
-1=Yellow 2=Green 3=Blue 4=Pink
+1=Yellow 2=Green 3=Blue 4=Pink.)
 
 Exceptions to the above:
 * A reward type card has a benefit value of an integer preceded by a + sign.
@@ -42,26 +42,7 @@ use Types::Standard qw( Str Int Enum ArrayRef Maybe InstanceOf );
 no warnings 'experimental';
 use namespace::clean;
 
-# coerce card cost/benefit strings into normal representation
-sub norm ($val) {
-   if (ref $val eq 'ARRAY') {
-     my $new = [map {norm($_)} @$val];
-     return $new;
-   } elsif ($val =~ /^_+$/) {
-      # don't touch- this is match any color symbol
-   } elsif ($val =~ /^\+\d+$/) {
-      # don't touch- this is point value for reward card
-   } elsif ($val eq '') {
-     return $val;
-   } elsif (!ref $val) {
-     $val =~ tr/ygbpYGBP/1-41-4/; # make numeric
-     $val = join '', sort {$a <=> $b} split //, $val;  # sort digits ascending
-     $val =~ tr/1-4/YGBP/; # make letters
-   } else {
-     croak "invalid type";
-   }
-   return $val;
-}
+use Cubes qw( norm value byvalue );  # also brings us: norm, cstring, value, byvalue
 
 # test whether a scalar could be coerced into a Card
 sub cardlike ($val) {
@@ -76,31 +57,6 @@ sub cardlike ($val) {
 
 my %cubeval = (Y => 1, G => 2, B => 3, P => 4);
 
-sub value ($string) {
-  croak "value operates only on cubestrings" if ref $string;
-  return 0 if $string eq '';
-  return $cubeval{$string} if length $string == 1;
-  my %cnt;
-  $cnt{$_}++ for split //, $string;
-  my $value = 0;
-  $value += sum map { $cubeval{$_}*$cnt{$_} } keys %cnt if %cnt;
-  return $value;
-}
-# sorting cubestrings by their value (ascending)
-sub byvalue { value($a) <=> value($b) }
-
-# returns undef if impossible, otherwise a cubestring (including '')
-sub subtract ($acube, $bcube) {
-  my %cubes;
-  $cubes{$_}++ for split //, $acube;
-  $cubes{$_}-- for split //, $bcube;
-  my $remain = '';
-  foreach my $color (sort byvalue keys %cubes) {
-    return undef if $cubes{$color} < 0;
-    $remain .= $color x $cubes{$color};
-  }
-  return $remain;
-}
 # increment a color -- used by conversion card
 sub colorinc ($cube, $plus = 1) {
   my $colors = 'YGBP';
