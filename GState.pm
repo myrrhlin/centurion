@@ -1,8 +1,14 @@
 package GState;
 
 use 5.26.0;
-use warnings;
 use feature 'signatures', 'postderef';
+
+use Moo;
+use strictures 2;
+no warnings 'experimental';
+
+use MooX::Clone;
+use Types::Standard qw( Str Int Enum ArrayRef Object InstanceOf );
 
 use Carp;
 use Carp::Always;
@@ -10,20 +16,16 @@ use Data::Printer;
 use Path::Tiny;
 use JSON::MaybeXS;
 
-use Moo;
-use Types::Standard qw( Str Int Enum ArrayRef Object InstanceOf );
-use Card;
-
-no warnings 'experimental';
 use namespace::clean;
 
-use MooX::Clone;
+use Cubes qw( norm value byvalue );  # also has: cstring
+use Card qw( cardlike );
 
 sub _cardify {
   my @refs;
-  if (@_>1 || Card::cardlike($_[0])) { @refs = @_ }
+  if (@_>1 || cardlike($_[0])) { @refs = @_ }
   elsif (ref $_[0] eq 'ARRAY') {
-    @refs = grep {Card::cardlike($_)} @{$_[0]};
+    @refs = grep {cardlike($_)} @{$_[0]};
     croak "cant cardify something here" unless @refs == @{$_[0]};
   } else {
     croak "cant cardify a non arrayref!";
@@ -34,7 +36,7 @@ sub _cardify {
 
 # player attributes:
 has score => (is => 'rw', isa => Int, default => 0);
-has cubes => (is => 'rw', isa => Str, required => 1, coerce => \&Card::norm);
+has cubes => (is => 'rw', isa => Str, required => 1, coerce => \&norm);
 has [qw(hand discard)] => (is => 'rw', required => 1,
   isa => ArrayRef[InstanceOf["Card"]],
   coerce => sub {[_cardify( @_ )]},
@@ -45,7 +47,7 @@ has [qw(hand discard)] => (is => 'rw', required => 1,
 has [qw(reward market)] => (is => 'rw', required => 1,
   isa => ArrayRef[InstanceOf["Card"], 1, 5] );
 has market_cubes => (is => 'rw', required => 1, isa => ArrayRef[Str, 5, 5],
-  coerce => \&Card::norm, default => sub {[('')x5]} );
+  coerce => \&norm, default => sub {[('')x5]} );
 
 # dont need decks if we're not playing a full game
 has deck => (is => 'rw', isa => ArrayRef[InstanceOf["Card"]]);
@@ -72,7 +74,7 @@ around BUILDARGS => sub {
       $args{$att}->@* );  # arrayrefs we start with
     $args{$att} = \@cards;
   }
-  $args{cubes} = Card::norm($args{cubes});
+  $args{cubes} = norm($args{cubes});
   return $class->$orig(%args);
 };
 
@@ -111,7 +113,7 @@ sub can_claim ($self) {
 }
 sub playable ($self, $card) {
   return 1 if $self->cubes && $card->is_conversion;
-  my $left = Card::subtract($self->cubes, $card->cost);
+  my $left = Cubes->new($self->cubes)->minus($card->cost);
   return defined $left ? 1 : 0;
 }
 
@@ -131,7 +133,7 @@ sub report ($self) {
     }
     print $i,$bonus,':',$card->describe(13); print $i==$num? "\n" : '  ';
     next unless $self->playable($card);
-    my $left = Card::subtract($self->cubes, $card->cost);
+    my $left = Cubes->new($self->cubes)->minus($card->cost);
     my $condition = sprintf ' leaving %s (%u)', $left, Card::value($left);
     $condition .= ' BAD' if length($left) < 2;
     push @menu, ["Claim reward $i$bonus: ". $card->describe . $condition, $i-1];
@@ -204,7 +206,7 @@ sub play ($self, $menuchoice) {
     $self->spend($cost);
     for (my $i=0; $i<$index; $i++) {
       # TODO there's a decision here about distributing them
-      $self->market_cubes->[$i] = Card::norm($self->market_cubes->[$i] . substr($cost,$i,1));
+      $self->market_cubes->[$i] = norm($self->market_cubes->[$i] . substr($cost,$i,1));
     }
     my $card = splice($self->market->@*, $index, 1);
     push $self->market->@*, shift $self->deck->@* if $self->deck && $self->deck->@*;
