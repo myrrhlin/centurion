@@ -1,8 +1,10 @@
 package Cubes;
 
 use 5.26.0;
-use warnings;
 use feature 'signatures', 'postderef';
+use strictures 2;
+no warnings 'experimental';
+
 use autodie;
 
 use Carp;
@@ -10,9 +12,9 @@ use Scalar::Util qw( blessed );
 use List::Util qw( sum );
 use Data::Printer;
 
-use Exporter::Shiny qw( norm cstring value byvalue );
+use namespace::clean;
 
-no warnings 'experimental';
+use Exporter::Shiny qw( norm cstring value byvalue );
 
 use overload
     "+" => 'plus',
