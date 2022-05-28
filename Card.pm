@@ -1,8 +1,20 @@
 package Card;
 
 use 5.26.0;
-use warnings;
 use feature 'signatures', 'postderef';
+
+use Moo;
+use strictures 2;
+no warnings 'experimental';  # after use Moo, because that has conflicting warnings
+
+use Types::Standard qw( Str Int Enum ArrayRef Maybe InstanceOf );
+
+use Carp;
+use Scalar::Util qw( blessed );
+use Data::Printer;
+use List::Util qw( sum );
+
+use namespace::clean;
 
 =head1 Card
 
@@ -31,18 +43,7 @@ e.g. [11133 => '+9'] pay 3Y+2B for 9 points
 
 =cut
 
-use Carp;
-use Scalar::Util qw( blessed );
-use Data::Printer;
-use List::Util qw( sum );
-
-use Moo;
-use Types::Standard qw( Str Int Enum ArrayRef Maybe InstanceOf );
-
-no warnings 'experimental';
-use namespace::clean;
-
-use Cubes qw( norm value byvalue );  # also brings us: norm, cstring, value, byvalue
+use Exporter::Shiny qw( cardlike colorinc );
 
 # test whether a scalar could be coerced into a Card
 sub cardlike ($val) {
@@ -54,9 +55,6 @@ sub cardlike ($val) {
   return if grep !/^(?:[ygbp1234]+|__|\+\d+)$/i, @$val;
   return 1;
 }
-
-my %cubeval = (Y => 1, G => 2, B => 3, P => 4);
-
 # increment a color -- used by conversion card
 sub colorinc ($cube, $plus = 1) {
   my $colors = 'YGBP';
@@ -65,6 +63,10 @@ sub colorinc ($cube, $plus = 1) {
   return 'P' if $current + $plus > 3;
   return substr($colors, $current+$plus, 1);
 }
+
+use Cubes qw( norm value byvalue );  # also has: cstring
+
+my %cubeval = (Y => 1, G => 2, B => 3, P => 4);
 
 has type => (is => 'ro', required => 1,
   isa => Enum[qw(reward xform)], default => 'xform',
