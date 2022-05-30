@@ -142,5 +142,8 @@ sub describe ($self, $width = 0) {
   return $out;
 }
 
+sub as_json ($self) {
+  return [$self->cost, $self->benefit];
+}
 
 1;

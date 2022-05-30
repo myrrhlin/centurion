@@ -10,6 +10,7 @@ no warnings 'experimental';
 use MooX::Clone;
 use Types::Standard qw( Str Int Enum ArrayRef Object InstanceOf );
 
+use Scalar::Util 'blessed';
 use Carp;
 use Carp::Always;
 use Data::Printer;
@@ -55,6 +56,16 @@ has reward_deck => (is => 'rw', isa => ArrayRef[InstanceOf["Card"]]);
 
 has [qw(golds silvers)] => (is => 'rw', isa => Int, default => 5);
 has maxcubes => (is => 'ro', isa => Int, default => 10);
+
+sub as_json ($self) {
+  # first collect the scalars
+  my %state = map {; $_ => $self->$_} qw<score cubes maxcubes golds silvers>;
+  # now the arrays of cards
+  foreach my $ar (qw<hand discard reward market market_cubes>) {
+    $state{$ar} = [ map {blessed $_ ? $_->as_json : $_} $self->$ar->@* ];
+  }
+  return \%state;
+}
 
 around BUILDARGS => sub {
   my ( $orig, $class, @args ) = @_;

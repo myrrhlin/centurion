@@ -59,5 +59,6 @@ cmp_deeply($card, methods(
   type => 'reward',
   ), 'reward card');
 
+cmp_deeply($card->as_json, bag("YYYBB", "+9"), 'as_json');
 
 done_testing;

@@ -23,6 +23,23 @@ my %input = (
 );
 ok my $gstate = GState->new( %input ), 'instantiate a state';
 
+cmp_deeply($gstate->as_json, superhashof({
+  # default values
+  golds   => 5,
+  silvers => 5,
+  score   => 0,
+  maxcubes => 10,
+  # market cards
+  reward => [[GGBBPP=>'+19'], [YYYBB=>'+9'], [GGBBB=>'+13'], [PPPP=>'+16'], [GGGPP=>'+14']],
+  market => [[GG=>'YYYB'],[P=>'YYYB'],[GG=>'BB'],[''=>'P'],[YYY=>'GGG']],
+  market_cubes => ['Y','','','',''],
+  # player
+  hand => [[YYB=>'PP'],[PP=>'YGBBB'],[BB=>'YYGP'],[BB=>'YYGGG'],[BBB=>'PPP'],
+    [BB=>'GGP'],[YY=>'G'],[GGG=>'BBB'],[__=>'YY']],
+  discard => [[''=>'YY']],
+  cubes => 'YYGB',
+}), 'as_json');
+
 my @menu = $gstate->report;
 my $label = 'a';
 foreach my $item (@menu) {
