@@ -24,7 +24,7 @@ use GState;
 my $statef = 'centurion.dat';
 sub load_state {
   my $stateh = decode_json(path($statef)->slurp_utf8);
-  return $stateh;
+  return GState->new(%$stateh);
 }
 sub save_state ($game) {
   path($statef)->spew(encode_json($game->as_json));
