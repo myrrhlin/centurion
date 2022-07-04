@@ -96,15 +96,18 @@ around BUILDARGS => sub {
   my ( $orig, $class, @args ) = @_;
   if (@args == 1) {
     my $onearg = $args[0];
-    if (ref $onearg eq 'ARRAY') {
+    if (!ref $onearg) {
+      my ($cost, $benefit) = split m![-+=/|,.]!, $onearg;
+      @args = (cost => $cost, benefit => $benefit) if $benefit;
+    } elsif (blessed $onearg && $onearg->isa('Card')) {
+      @args = (cost => $onearg->cost, benefit => $onearg->benefit);
+    } elsif (ref $onearg eq 'HASH') {
+      @args = map {; $_ => $onearg->{$_}} keys %$onearg;
+    } elsif (ref $onearg eq 'ARRAY') {
       my $val = norm($args[0]);
-      unshift @$val, '' if @$val == 1;  # single element -- no cost
+      unshift @$val, '' if @$val == 1;  # single element -- no cost!
       my ($cost, $benefit) = @$val;
       @args = (cost => $cost, benefit => $benefit);
-      push @args, type => 'reward' if $benefit =~ /^\+/;
-    } elsif (blessed $onearg && $onearg->isa('Card')) {
-      my $card = $onearg;
-      @args = (type => $card->type, cost => $card->cost, benefit => $card->benefit);
     } else {
       croak "got unexpected one arg: ".np($onearg);
     }
