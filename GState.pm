@@ -7,7 +7,6 @@ use Moo;
 use strictures 2;
 no warnings 'experimental';
 
-use MooX::Clone;
 use Types::Standard qw( Str Int Enum ArrayRef Object InstanceOf );
 
 use Scalar::Util 'blessed';
@@ -19,6 +18,7 @@ use JSON::MaybeXS;
 
 use namespace::clean;
 
+use MooX::Clone;
 use Cubes qw( norm value byvalue );  # also has: cstring
 use Card qw( cardlike );
 
