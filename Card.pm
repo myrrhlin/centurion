@@ -45,14 +45,20 @@ e.g. [11133 => '+9'] pay 3Y+2B for 9 points
 
 use Exporter::Shiny qw( cardlike colorinc );
 
+my $costre = qr/^(?:[ygbp1234]+|__)?$/i;
+my $benefitre = qr/^(?:\+?\d+|[ygbp]+)$/i;
+
 # test whether a scalar could be coerced into a Card
+# the scalar is expected to be an arrayref of two elements, cost and benefit
 sub cardlike ($val) {
   return unless my $type = ref $val;
   return 1 if blessed $val && $val->isa('Card');
   return if blessed $val || $type ne 'ARRAY';
   return if @$val > 2 || !@$val;
   return if grep ref, @$val;  # all elements must be plain scalars
-  return if grep !/^(?:[ygbp1234]+|__|\+\d+)$/i, @$val;
+  return if $val->[0] !~ $costre || $val->[1] !~ $benefitre;
+  # upgrades cannot be reward cards:
+  return if $val->[0] =~ /^_+$/ && $val->[1] =~ /^\+\d+$/;
   return 1;
 }
 # increment a color -- used by conversion card
