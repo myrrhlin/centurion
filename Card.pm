@@ -74,14 +74,13 @@ use Cubes qw( norm value byvalue );  # also has: cstring
 
 my %cubeval = (Y => 1, G => 2, B => 3, P => 4);
 
-has type => (is => 'ro', required => 1,
-  isa => Enum[qw(reward xform)], default => 'xform',
-);
 has cost => (is => 'ro', required => 1, isa => Str, coerce => \&norm);
 has benefit => (is => 'ro', required => 1, isa => Str, coerce => \&norm);
+has type  => (is => 'lazy', isa => Enum[qw(reward xform)]);
 has vgain => (is => 'lazy', isa => Maybe[Int]);  # change in value
 has cgain => (is => 'lazy', isa => Maybe[Int]);  # change in length
 
+sub _build_type ($self) { $self->benefit =~ /^\+\d+$/ ? 'reward' : 'xform' }
 sub _build_vgain ($self) {
   return if $self->type eq 'reward';
   return 2 if $self->cost eq '__';
