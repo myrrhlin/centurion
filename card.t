@@ -4,7 +4,7 @@ use Test::More;
 use Test::Deep;
 
 use lib '.';
-use Card;
+use Card qw< cardlike >;
 
 ok my $card = Card->new(cost => '1111', benefit => 'bb'), 'instantiated with attributes';
 cmp_deeply($card, methods(
@@ -26,6 +26,19 @@ cmp_deeply($card, methods(
   benefit => 'YY',
   type => 'xform',
   ), 'card with no cost');
+
+my @cardlikes = (
+  [ YY => 'G' ],
+  [ yy => 'yb' ],
+  [ 11 => 13 ],
+  [ '' => 'B' ],
+  [ __ => 'Yy' ],
+  [ __ => 11 ],
+  [ pPPp => '+16' ],
+);
+foreach my $thing (@cardlikes) {
+  ok cardlike($thing), "$thing was cardlike";
+}
 
 ok $card = Card->new([ __ => 11]), 'instantiate arbitrary upgrade card';
 cmp_deeply($card, methods(
